@@ -1,4 +1,4 @@
-## POC for office plans
+## POC for office building plans
 
 **Note: may be helpful if you get errors installing sharp (server)**
 ```
