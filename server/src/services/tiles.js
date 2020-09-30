@@ -2,26 +2,55 @@ const sharp = require('sharp');
 const path = require('path');
 
 const TILE_SIZE = 256;
+const EXTENSION_FACTOR = 0.5; // image padding for x axis
 
-const getTile = (x, y, zoom) => {
-  const number = getNumberOfTiles(zoom);
-  const picSize = number * TILE_SIZE;
-  const imagePath = path.resolve(__dirname, '../../public/building1.jpg'); // example
+const getLongestDimensionSize = ({ width, height }) =>
+  width > height ? width : height;
 
-  if (x >= number || y >= number || x < 0 || y < 0) return null;
+const getNumberOfTiles = (zoom) => 1 << zoom;
 
-  return sharp(imagePath)
-    .resize(picSize, picSize, { fit: 'cover' })
+const resizeOriginalImage = async (imagePath, picSize) => {
+  const image = sharp(imagePath);
+  const imageMeta = await image.metadata();
+  const longestDimensionSize = getLongestDimensionSize(imageMeta);
+  const extensionSize = Math.ceil(longestDimensionSize * EXTENSION_FACTOR);
+
+  const extendedImage = await image
+    .extend({
+      top: extensionSize,
+      left: extensionSize,
+      bottom: extensionSize,
+      right: extensionSize,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .toFormat('png')
+    .toBuffer();
+
+  return sharp(extendedImage).resize(picSize, picSize, {
+    fit: sharp.fit.contain,
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+  });
+};
+
+const getTile = async (x, y, zoom) => {
+  const number = getNumberOfTiles(zoom); // number of tiles map contains for exact zoom level
+  const picSize = number * TILE_SIZE; // expected size of image to be resized to
+  const imagePath = path.resolve(__dirname, '../../public/building1.jpg'); // example image
+
+  if (x >= number || y >= number || x < 0 || y < 0) return null; // if outside bounds should return nothing
+
+  const image = await resizeOriginalImage(imagePath, picSize);
+
+  return image
     .extract({
       left: x * TILE_SIZE,
       top: y * TILE_SIZE,
       width: TILE_SIZE,
       height: TILE_SIZE,
     })
+    .toFormat('png')
     .toBuffer();
 };
-
-const getNumberOfTiles = (zoom) => 1 << zoom;
 
 module.exports = {
   getTile,
