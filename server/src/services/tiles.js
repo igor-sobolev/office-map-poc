@@ -41,7 +41,7 @@ const getTile = async (x, y, zoom) => {
 
   const image = await resizeOriginalImage(imagePath, picSize);
 
-  return image
+  return image // @TODO: store tiles in FS, could be storing on demand or split original resized on upload to server
     .extract({
       left: x * TILE_SIZE,
       top: y * TILE_SIZE,
