@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // @TODO: remove it to service
 
 const { getTile } = require('./services/tiles');
+const { getSvgWithMeta } = require('./services/svg');
 
 const app = express();
 const port = 8080;
@@ -23,7 +25,11 @@ app.get('/objects', async (req, res) => {
   const objects = [
     {
       type: 'table',
-      rotate: 0,
+      svg: await getSvgWithMeta(
+        // @TODO: remove it to service
+        path.resolve(__dirname, '../public/objects/table.svg')
+      ),
+      rotate: 270,
       position: {
         lat: 24.972668049404348,
         lng: 61.267712443011675,
@@ -35,9 +41,13 @@ app.get('/objects', async (req, res) => {
     },
     {
       type: 'table',
+      svg: await getSvgWithMeta(
+        // @TODO: remove it to service
+        path.resolve(__dirname, '../public/objects/table.svg')
+      ),
       rotate: 90,
       position: {
-        lat: 1.7575368113083254,
+        lat: 4.7575368113083254,
         lng: -30.5859375,
       },
       meta: {

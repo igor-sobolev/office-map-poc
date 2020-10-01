@@ -1,5 +1,3 @@
-import { MAP_OBJECTS_ICONS } from '../constants/mapObjects.const';
-
 const TILE_URL = 'http://localhost:8080/tile?x={x}&y={y}&zoom={z}';
 const BOUNDS_SHRINK_PERCENTAGE = 0.08;
 
@@ -18,7 +16,7 @@ export class AppMap {
     );
     this._infoWindow = new window.google.maps.InfoWindow();
 
-    this._map.addListener('zoom_changed', () => this._scaleObjects());
+    this._map.addListener('zoom_changed', () => this._scaleMarkers());
 
     // @TODO: feels weird
     // this._map.addListener('idle', () => this._worldViewFit(this._map)); // don't go to repeatable image on x axis
@@ -49,10 +47,10 @@ export class AppMap {
   _createMarkers(objects) {
     this._markers = objects.map((object) => {
       const markerIcon = {
-        url: MAP_OBJECTS_ICONS[object.type],
-        rotate: object.rotate,
-        scaledSize: new window.google.maps.Size(32, 32),
-        size: new window.google.maps.Size(32, 32), //scale (8*2^2=32)
+        path: object.svg.path,
+        rotation: object.rotate,
+        strokeWeight: 1,
+        dimensions: object.svg.dimensions, // store dimensions
       };
       const marker = new window.google.maps.Marker({
         position: object.position,
@@ -74,7 +72,7 @@ export class AppMap {
     this._markers = [];
   }
 
-  _scaleObjects() {
+  _scaleMarkers() {
     const pixelSizeAtZoom0 = 8; //the size of the icon at zoom level 0, at zoom level 2 it'll be 8*2^2=32
     const maxPixelSize = 450; //restricts the maximum size of the icon, otherwise the browser will choke at higher zoom levels trying to scale an image to millions of pixels
 
@@ -88,12 +86,9 @@ export class AppMap {
     //change the size of the icon
     this._markers.forEach((marker) =>
       marker.setIcon({
-        url: marker.getIcon().url, //marker's same icon graphic
-        scaledSize: new window.google.maps.Size(
-          relativePixelSize,
-          relativePixelSize
-        ), //changes the scale
-        size: new window.google.maps.Size(relativePixelSize, relativePixelSize), //changes the scale
+        ...marker.getIcon(), //marker's same icon graphic
+        test: console.log(marker),
+        scale: relativePixelSize / marker.icon.dimensions.width,
       })
     );
   }
@@ -136,5 +131,6 @@ export class AppMap {
   renderObjects(objects) {
     this._clearMarkers();
     this._createMarkers(objects);
+    this._scaleMarkers();
   }
 }
