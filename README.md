@@ -4,3 +4,7 @@
 ```
 apt-get update && apt-get install -y libvips-dev --no-install-recommends
 ```
+
+## Run in docker
+
+*Coming soon!*
