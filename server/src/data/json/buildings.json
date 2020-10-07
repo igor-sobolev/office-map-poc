@@ -1,0 +1,48 @@
+[
+  {
+    "name": "building_1",
+    "objects": [
+      {
+        "type": "table",
+        "rotate": 270,
+        "position": {
+          "lat": 24.972668049404348,
+          "lng": 61.267712443011675
+        },
+        "meta": {
+          "computer": "Intel i5-6400, 16Gb RAM, Nvidia GTX-970",
+          "owner": "Ivan Ivanov"
+        }
+      },
+      {
+        "type": "table",
+        "rotate": 90,
+        "position": {
+          "lat": 4.7575368113083254,
+          "lng": -30.5859375
+        },
+        "meta": {
+          "computer": "Intel i5-6500, 8Gb RAM, Nvidia GTX-1030",
+          "owner": "Petr Petrov"
+        }
+      }
+    ]
+  },
+  {
+    "name": "building_2",
+    "objects": [
+      {
+        "type": "table",
+        "rotate": 0,
+        "position": {
+          "lat": 34.972668049404348,
+          "lng": 45.267712443011675
+        },
+        "meta": {
+          "computer": "NO PC",
+          "owner": "Ivan Ivanov"
+        }
+      }
+    ]
+  }
+]

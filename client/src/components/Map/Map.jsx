@@ -1,14 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { number } from 'prop-types';
+import { number, shape, array, string } from 'prop-types';
 import { useMaps } from '../../hooks/useMaps';
 import { AppMap } from '../../services/AppMap';
-import { useMapObjects } from '../../hooks/useMapObjects';
 
-const Map = ({ width, height }) => {
+const Map = ({ width, height, building }) => {
   const [map, setMap] = useState();
   const mapRoot = useRef(null);
   const { isLoaded } = useMaps();
-  const { mapObjects } = useMapObjects();
 
   useEffect(() => {
     if (isLoaded && mapRoot.current) {
@@ -18,10 +16,14 @@ const Map = ({ width, height }) => {
   }, [isLoaded, mapRoot]);
 
   useEffect(() => {
-    if (map && mapObjects) {
-      map.renderObjects(mapObjects);
+    if (map && building && building.objects && building.name) {
+      map.setBuilding(building.name);
+      map.renderObjects(building.objects);
+      window.google.maps.event.trigger(map, 'resize');
     }
-  }, [mapObjects, map]);
+  }, [map, building]);
+
+  if (!building) return null;
 
   return (
     <div ref={mapRoot} style={{ width, height }}>
@@ -33,6 +35,10 @@ const Map = ({ width, height }) => {
 Map.propTypes = {
   width: number.isRequired,
   height: number.isRequired,
+  building: shape({
+    name: string,
+    objects: array,
+  }),
 };
 
 export default Map;

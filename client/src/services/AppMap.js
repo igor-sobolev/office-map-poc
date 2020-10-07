@@ -1,48 +1,64 @@
-const TILE_URL = 'http://localhost:8080/tile?x={x}&y={y}&zoom={z}';
+const TILE_URL = 'http://localhost:8080/tiles/{building}?x={x}&y={y}&zoom={z}';
 const BOUNDS_SHRINK_PERCENTAGE = 0.08;
 
 export class AppMap {
   constructor(ref) {
-    this._map = new window.google.maps.Map(ref, {
-      zoom: 2,
-      center: new window.google.maps.LatLng(0, 0),
-    });
+    this._el = ref;
     this._markers = [];
-    this._layerID = 'plan';
-    this._layer = this._getLayer();
-    this._applyLayer();
-    this._map.addListener('click', (e) =>
-      console.log(e, e.latLng.lat(), e.latLng.lng())
-    );
-    this._infoWindow = new window.google.maps.InfoWindow();
+    this._building = '';
 
-    this._map.addListener('zoom_changed', () => this._scaleMarkers());
+    this._layer = this._getLayer();
+
+    this._loadMap();
+
+    this._infoWindow = new window.google.maps.InfoWindow();
 
     // @TODO: feels weird
     // this._map.addListener('idle', () => this._worldViewFit(this._map)); // don't go to repeatable image on x axis
   }
 
-  _applyLayer() {
-    this._map.mapTypes.set(this._layerID, this._layer);
-    this._map.setMapTypeId(this._layerID);
+  _loadMap() {
+    this._map = new window.google.maps.Map(this._el, {
+      zoom: 2,
+      center: new window.google.maps.LatLng(0, 0),
+    });
+    this._layer.apply();
+
+    this._map.addListener('zoom_changed', () => this._scaleMarkers());
+  }
+
+  _applyLayer(id, layer) {
+    this._map.mapTypes.set(id, layer);
+    this._map.setMapTypeId(id);
   }
 
   _getLayer() {
-    return new window.google.maps.ImageMapType({
+    const layerID = 'plan';
+
+    const layer = new window.google.maps.ImageMapType({
       name: this._layerID,
       getTileUrl: this._getTileUrl,
       tileSize: new window.google.maps.Size(256, 256),
       minZoom: 2,
       maxZoom: 6,
     });
+
+    const apply = () => this._applyLayer(layerID, layer);
+
+    return {
+      layer,
+      apply,
+    };
   }
 
-  _getTileUrl(coord, zoom) {
-    var url = TILE_URL.replace('{x}', coord.x)
+  _getTileUrl = (coord, zoom) => {
+    const url = TILE_URL.replace('{x}', coord.x)
       .replace('{y}', coord.y)
-      .replace('{z}', zoom);
+      .replace('{z}', zoom)
+      .replace('{building}', this._building);
+
     return url;
-  }
+  };
 
   _createMarkers(objects) {
     this._markers = objects.map((object) => {
@@ -50,6 +66,7 @@ export class AppMap {
         path: object.svg.path,
         rotation: object.rotate,
         strokeWeight: 1,
+        strokeColor: '#ff0000',
         dimensions: object.svg.dimensions, // store dimensions
       };
       const marker = new window.google.maps.Marker({
@@ -87,7 +104,6 @@ export class AppMap {
     this._markers.forEach((marker) =>
       marker.setIcon({
         ...marker.getIcon(), //marker's same icon graphic
-        test: console.log(marker),
         scale: relativePixelSize / marker.icon.dimensions.width,
       })
     );
@@ -132,5 +148,10 @@ export class AppMap {
     this._clearMarkers();
     this._createMarkers(objects);
     this._scaleMarkers();
+  }
+
+  setBuilding(buildingName) {
+    this._building = buildingName;
+    this._loadMap();
   }
 }

@@ -4,9 +4,9 @@
     "browser": true,
     "node": true
   },
+  "parser": "babel-eslint",
   "parserOptions": {
-    "parser": "babel-eslint",
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2019,
     "sourceType": "module"
   },
   "extends": ["plugin:react/recommended", "plugin:prettier/recommended"],
