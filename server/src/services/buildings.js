@@ -1,6 +1,6 @@
 const path = require('path');
 
-const { getSvgWithMeta } = require('./svg');
+const { getObjectSvgByType } = require('./svg');
 const buildings = require('../data/json/buildings.json');
 
 const getAllBuildings = () => {
@@ -15,9 +15,7 @@ const getAllBuildings = () => {
 const addSvgToObjects = (objects) => {
   const newObjects = objects.map(async (object) => ({
     ...object,
-    svg: await getSvgWithMeta(
-      path.resolve(__dirname, '../data/store/objects/table.svg') // @TODO: populate according to type
-    ),
+    svg: await getObjectSvgByType(object.type, { rotate: object.rotate }),
   }));
 
   return Promise.all(newObjects);

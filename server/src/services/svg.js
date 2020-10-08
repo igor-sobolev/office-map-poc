@@ -1,47 +1,19 @@
-const { pathThatSvg } = require('path-that-svg');
-const fs = require('fs');
+const svgTools = require('simple-svg-tools');
+const path = require('path');
 
-const mergePaths = (svg) => {
-  const pathRE = /<path.*? d="([\d\w \.\-]+?)"/gim;
-  let merged = '';
-  let result;
+const getObjectSvgByType = async (type, { rotate }) => {
+  const filePath = path.resolve(__dirname, `../data/store/objects/${type}.svg`);
+  try {
+    const svg = await svgTools.ImportSVG(filePath);
+    const optimized = await svgTools.SVGO(svg);
+    const rotated = optimized
+      .toString()
+      .replace('<svg', `<svg transform="rotate(${rotate})"`);
 
-  while (null !== (result = pathRE.exec(svg))) {
-    const [, dContent] = result;
-
-    merged += `\n${dContent}`;
+    return rotated;
+  } catch (error) {
+    console.log(error);
   }
-  return merged;
 };
 
-const getDimensions = (svg) => {
-  const widthRE = /<svg.*? width="(\d+)/gm;
-  const heightRE = /<svg.*? height="(\d+)"/gm;
-  const [, width] = widthRE.exec(svg);
-  const [, height] = heightRE.exec(svg);
-
-  return {
-    width,
-    height,
-  };
-};
-
-const getSvgWithMeta = (pathToFile) =>
-  new Promise((resolve, reject) => {
-    fs.readFile(pathToFile, (err, input) => {
-      if (err) reject(err);
-      pathThatSvg(input)
-        .then((convertedFromBuffer) => convertedFromBuffer)
-        .then((svgWithPaths) => {
-          const path = mergePaths(svgWithPaths);
-          const dimensions = getDimensions(svgWithPaths);
-          resolve({
-            path,
-            dimensions,
-          });
-        })
-        .catch((err) => reject(err));
-    });
-  });
-
-module.exports = { getSvgWithMeta };
+module.exports = { getObjectSvgByType };

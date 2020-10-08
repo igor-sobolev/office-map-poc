@@ -8,7 +8,7 @@ export const useBuildings = () => {
   useEffect(() => {
     const makeRequest = async () => {
       try {
-        const response = await fetch('http://localhost:8080/buildings');
+        const response = await fetch('http://localhost:8080/buildings'); // @TODO: improve with reverse proxy or smth similar
         setBuildings(await response.json());
       } catch (e) {
         setError(e);

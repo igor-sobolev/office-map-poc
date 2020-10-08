@@ -13,8 +13,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "path-that-svg": "^1.2.4",
-    "sharp": "^0.26.1"
+    "sharp": "^0.26.1",
+    "simple-svg-tools": "^1.1.12"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

@@ -63,11 +63,7 @@ export class AppMap {
   _createMarkers(objects) {
     this._markers = objects.map((object) => {
       const markerIcon = {
-        path: object.svg.path,
-        rotation: object.rotate,
-        strokeWeight: 1,
-        strokeColor: '#ff0000',
-        dimensions: object.svg.dimensions, // store dimensions
+        url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
       };
       const marker = new window.google.maps.Marker({
         position: object.position,
@@ -104,7 +100,11 @@ export class AppMap {
     this._markers.forEach((marker) =>
       marker.setIcon({
         ...marker.getIcon(), //marker's same icon graphic
-        scale: relativePixelSize / marker.icon.dimensions.width,
+        scaledSize: new window.google.maps.Size(
+          relativePixelSize,
+          relativePixelSize
+        ), //changes the scale
+        size: new window.google.maps.Size(relativePixelSize, relativePixelSize), //changes the scale
       })
     );
   }
