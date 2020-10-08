@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export const useBuildings = () => {
-  const [buildings, setBuildings] = useState();
+  const [buildings, setBuildings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState();
 
