@@ -1,9 +1,9 @@
 const TILE_URL = 'http://localhost:8080/tiles/{building}?x={x}&y={y}&zoom={z}';
-const BOUNDS_SHRINK_PERCENTAGE = 0.08;
 
-export class AppMap {
+export class GMapWrapper {
   constructor(ref) {
     this._el = ref;
+    this._onObjectsUpdate = () => {};
     this._markers = [];
     this._building = '';
 
@@ -12,9 +12,6 @@ export class AppMap {
     this._loadMap();
 
     this._infoWindow = new window.google.maps.InfoWindow();
-
-    // @TODO: feels weird
-    // this._map.addListener('idle', () => this._worldViewFit(this._map)); // don't go to repeatable image on x axis
   }
 
   _loadMap() {
@@ -66,18 +63,35 @@ export class AppMap {
         url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
       };
       const marker = new window.google.maps.Marker({
-        position: object.position,
+        ...object,
+        position: object.position || this._map.getCenter(),
         map: this._map,
         title: object.type,
         icon: markerIcon,
+        draggable: object.draggable,
       });
       marker.addListener('click', () => {
         this._infoWindow.setContent(JSON.stringify(object.meta));
         this._infoWindow.open(this._map, marker);
       });
+      marker.addListener('dragend', () => this._onObjectsUpdate(this._markers));
 
       return marker;
     });
+  }
+
+  _addObject(object) {
+    const markerIcon = {
+      url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
+    };
+    const marker = new window.google.maps.Marker({
+      position: new window.google.maps.LatLng(0, 0),
+      map: this._map,
+      animation: window.google.maps.Animation.DROP,
+      title: object.type,
+      icon: markerIcon,
+    });
+    this._markers.push(marker);
   }
 
   _clearMarkers() {
@@ -109,39 +123,8 @@ export class AppMap {
     );
   }
 
-  _slightlySmallerBounds(southWest, northEast) {
-    const adjustmentAmount = (value1, value2) =>
-      Math.abs(value1 - value2) * BOUNDS_SHRINK_PERCENTAGE;
-
-    let latAdjustment = adjustmentAmount(northEast.lat(), southWest.lat());
-    let lngAdjustment = adjustmentAmount(northEast.lng(), southWest.lng());
-
-    return [
-      {
-        lat: southWest.lat() + latAdjustment,
-        lng: southWest.lng() + lngAdjustment,
-      },
-      {
-        lat: northEast.lat() - latAdjustment,
-        lng: northEast.lng() - lngAdjustment,
-      },
-    ];
-  }
-
-  _worldViewFit(map) {
-    const bounds = map.getBounds();
-    const northEast = bounds.getNorthEast();
-    const southWest = bounds.getSouthWest();
-    console.log(northEast.lng(), southWest.lng());
-    if (northEast.lng() > 179 || southWest.lng() < -179) {
-      const [newSouthWest, newNorthEast] = this._slightlySmallerBounds(
-        southWest,
-        northEast
-      );
-      map.fitBounds(
-        new window.google.maps.LatLngBounds(newSouthWest, newNorthEast)
-      );
-    }
+  setObjectsUpdateCallback(cb) {
+    this._onObjectsUpdate = cb;
   }
 
   renderObjects(objects) {

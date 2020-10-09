@@ -1,9 +1,13 @@
+const fs = require('fs');
 const path = require('path');
 
+const buildingsPath = path.resolve(__dirname, '../data/json/buildings.json');
+const objectsPath = path.resolve(__dirname, '../data/json/objects.json');
+
 const { getObjectSvgByType } = require('./svg');
-const buildings = require('../data/json/buildings.json');
 
 const getAllBuildings = () => {
+  const buildings = require(buildingsPath);
   const buildingsWithSvg = buildings.map(async (building) => ({
     ...building,
     objects: await addSvgToObjects(building.objects),
@@ -12,13 +16,37 @@ const getAllBuildings = () => {
   return Promise.all(buildingsWithSvg);
 };
 
+const getAllObjects = async () => {
+  const objects = require(objectsPath);
+
+  return await addSvgToObjects(objects);
+};
+
 const addSvgToObjects = (objects) => {
   const newObjects = objects.map(async (object) => ({
     ...object,
-    svg: await getObjectSvgByType(object.type, { rotate: object.rotate }),
+    svg: await getObjectSvgByType(object.name, { rotate: object.rotate }),
   }));
 
   return Promise.all(newObjects);
 };
 
-module.exports = { getAllBuildings };
+const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
+  const buildings = require(buildingsPath);
+  const updatedBuildings = buildings.map((currentBuilding) => ({
+    ...currentBuilding,
+    objects:
+      currentBuilding.name === buildingName ? objects : currentBuilding.objects,
+  }));
+  fs.writeFile(buildingsPath, JSON.stringify(updatedBuildings), (err) => {
+    if (err) return console.log(err);
+    console.log(JSON.stringify(updatedBuildings));
+    console.log('writing to ' + buildingsPath);
+  });
+};
+
+module.exports = {
+  getAllBuildings,
+  getAllObjects,
+  updateBuildingObjectsByBuildingName,
+};

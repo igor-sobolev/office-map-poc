@@ -1,0 +1,16 @@
+[
+  {
+    "name": "table",
+    "size": {
+      "width": 32,
+      "heigh": 20
+    }
+  },
+  {
+    "name": "soccer-table",
+    "size": {
+      "width": 20,
+      "heigh": 20
+    }
+  }
+]

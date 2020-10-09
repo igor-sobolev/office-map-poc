@@ -11,5 +11,7 @@ router.use(function timeLog(req, res, next) {
 
 // define the home page route
 router.get('/', buildingsController.getBuildings);
+router.get('/objects', buildingsController.getObjects);
+router.put('/:buildingName/objects', buildingsController.updateBuildingObjects);
 
 module.exports = router;
