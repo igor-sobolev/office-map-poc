@@ -2,6 +2,7 @@ const {
   getAllBuildings,
   getAllObjects,
   updateBuildingObjectsByBuildingName,
+  getImageByObjectName,
 } = require('../services/buildings');
 
 const getBuildings = async (req, res) => {
@@ -40,8 +41,24 @@ const updateBuildingObjects = async (req, res) => {
   }
 };
 
+const getObjectIcon = async (req, res) => {
+  const { objectName } = req.params;
+
+  try {
+    const image = await getImageByObjectName(objectName);
+
+    res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', 'inline');
+    res.send(image);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+};
+
 module.exports = {
   getBuildings,
+  getObjectIcon,
   getObjects,
   updateBuildingObjects,
 };

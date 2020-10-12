@@ -1,4 +1,8 @@
+import { fetchImageAsBase64 } from '../helpers/image';
+import { RotatedIcon } from './RotatedIcon';
+
 const TILE_URL = 'http://localhost:8080/tiles/{building}?x={x}&y={y}&zoom={z}';
+const ICON_SIZE_FACTOR = 8; //the size of the icon at zoom level 0, at zoom level 2 it'll be 8*2^2=32
 
 export class GMapWrapper {
   constructor(root, menu) {
@@ -85,29 +89,44 @@ export class GMapWrapper {
     return url;
   };
 
-  _createMarkers(objects) {
-    this._markers = objects.map((object, index) => {
-      const markerIcon = {
-        url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
-      };
-      const marker = new window.google.maps.Marker({
-        ...object,
-        position: object.position || new window.google.maps.LatLng(0, 0),
-        map: this._map,
-        title: object.name,
-        icon: markerIcon,
-        draggable: object.draggable || false,
-      });
-      marker.addListener('click', () => {
-        if (!object.meta) return;
-        this._infoWindow.setContent(JSON.stringify(object.meta));
-        this._infoWindow.open(this._map, marker);
-      });
-      marker.addListener('dragend', () => this._onObjectsUpdate(this._markers));
-      marker.addListener('dblclick', () => this._deleteMarker(index));
+  async _createMarkers(objects) {
+    this._markers = await Promise.all(
+      objects.map(async (object, index) => {
+        const image = await fetchImageAsBase64(
+          `http://localhost:8080/buildings/objects/${object.name}/image`
+        );
+        const width = Math.round(
+          ICON_SIZE_FACTOR * Math.pow(2, this._map.getZoom())
+        );
+        const markerIconUrl = new RotatedIcon({
+          url: image,
+          scaledSize: new window.google.maps.Size(width, width), //changes the scale
+          size: new window.google.maps.Size(width, width), //changes the scale
+        })
+          .setRotation({ deg: object.rotate })
+          .getUrl();
+        console.log(markerIconUrl);
+        const marker = new window.google.maps.Marker({
+          ...object,
+          position: object.position || new window.google.maps.LatLng(0, 0),
+          map: this._map,
+          title: object.name,
+          icon: { url: markerIconUrl },
+          draggable: object.draggable || false,
+        });
+        marker.addListener('click', () => {
+          if (!object.meta) return;
+          this._infoWindow.setContent(JSON.stringify(object.meta));
+          this._infoWindow.open(this._map, marker);
+        });
+        marker.addListener('dragend', () =>
+          this._onObjectsUpdate(this._markers)
+        );
+        marker.addListener('dblclick', () => this._deleteMarker(index));
 
-      return marker;
-    });
+        return marker;
+      })
+    );
   }
 
   _deleteMarker(index) {
@@ -125,11 +144,10 @@ export class GMapWrapper {
   }
 
   _scaleMarkers() {
-    const pixelSizeAtZoom0 = 8; //the size of the icon at zoom level 0, at zoom level 2 it'll be 8*2^2=32
     const maxPixelSize = 450; //restricts the maximum size of the icon, otherwise the browser will choke at higher zoom levels trying to scale an image to millions of pixels
 
     const zoom = this._map.getZoom();
-    let relativePixelSize = Math.round(pixelSizeAtZoom0 * Math.pow(2, zoom)); // use 2 to the power of current zoom to calculate relative pixel size.  Base of exponent is 2 because relative size should double every time you zoom in
+    let relativePixelSize = Math.round(ICON_SIZE_FACTOR * Math.pow(2, zoom)); // use 2 to the power of current zoom to calculate relative pixel size.  Base of exponent is 2 because relative size should double every time you zoom in
 
     if (relativePixelSize > maxPixelSize)
       //restrict the maximum size of the icon
