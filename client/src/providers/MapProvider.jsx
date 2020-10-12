@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect, useContext } from 'react';
 import { createContext } from 'react';
 import PropTypes from 'prop-types';
 import { updateObjectsPosition } from '../services/building';
+import { convertMarkersToObjects } from '../helpers/objects';
 
 const MapCtx = createContext();
 
@@ -11,14 +12,20 @@ const MapProvider = ({ children }) => {
   const [isMoveMode, setMoveMode] = useState(false);
   const [objects, setObjects] = useState([]);
 
-  const syncFunction = useCallback(
-    (markers) => updateObjectsPosition(building, markers),
-    [building]
+  const onObjectsUpdateHandler = useCallback(
+    (markers) => {
+      const objects = markers
+        .map(convertMarkersToObjects)
+        .map((object) => ({ ...object, draggable: isMoveMode }));
+      setObjects(objects);
+      updateObjectsPosition(building, objects);
+    },
+    [building, isMoveMode]
   );
 
   useEffect(() => {
-    if (map) map.setObjectsUpdateCallback(syncFunction);
-  }, [map, syncFunction]);
+    if (map) map.onObjectsUpdate(onObjectsUpdateHandler);
+  }, [map, onObjectsUpdateHandler]);
 
   useEffect(() => {
     if (building?.objects) setObjects(building.objects);
@@ -27,10 +34,14 @@ const MapProvider = ({ children }) => {
   useEffect(() => {
     if (map && building?.name && objects) {
       map.setBuilding(building.name);
+    }
+  }, [map, building, objects]);
+
+  useEffect(() => {
+    if (map && objects) {
       map.renderObjects(objects);
     }
-    console.log(objects);
-  }, [map, building, objects]);
+  }, [map, objects]);
 
   useEffect(() => {
     setObjects((previousObjects) =>
@@ -45,7 +56,7 @@ const MapProvider = ({ children }) => {
         { ...object, draggable: isMoveMode },
       ]);
     },
-    [objects]
+    [isMoveMode]
   );
 
   return (

@@ -15,7 +15,7 @@ const Select = ({
 
   useEffect(() => {
     setState(value);
-  }, [value]);
+  }, [value, setState]);
 
   const onChangeHandler = useCallback(
     (e) => {
@@ -26,7 +26,7 @@ const Select = ({
       );
       onChange && onChange(selectedOption);
     },
-    [options]
+    [options, setState, onChange, valueKey]
   );
 
   return (

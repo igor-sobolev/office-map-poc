@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Map } from '../Map';
 import { useBuildings } from '../../hooks/useBuildings';
@@ -31,11 +31,18 @@ const OfficeMap = () => {
 
   useEffect(() => {
     if (buildings && buildings.length) setBuilding(buildings[0]);
-  }, [buildings]);
+  }, [buildings, setBuilding]);
 
   if (objectsError || buildingsError) return 'Error!';
 
   if (isLoadingBuildings || isLoadingObjects) return 'Loading...';
+
+  const menu = (
+    <ul style={{ listStyle: 'none', border: '1px solid #cecece', padding: 0 }}>
+      <li style={{ background: 'white' }}>add object</li>
+      <li style={{ background: 'white' }}>remove object</li>
+    </ul>
+  );
 
   return (
     <>
@@ -61,12 +68,9 @@ const OfficeMap = () => {
         ) : (
           <button onClick={() => setMoveMode(true)}>Move Objects</button>
         )}
-        {!isMoveMode && (
-          <button onClick={() => console.log('sync')}>Sync Server</button>
-        )}
       </div>
 
-      <Map width={900} height={555} />
+      <Map width={900} height={555} contextMenu={menu} />
     </>
   );
 };

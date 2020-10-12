@@ -5,6 +5,7 @@ const buildingsPath = path.resolve(__dirname, '../data/json/buildings.json');
 const objectsPath = path.resolve(__dirname, '../data/json/objects.json');
 
 const { getObjectSvgByType } = require('./svg');
+const { objectConvertor } = require('../helpers/objects');
 
 const getAllBuildings = () => {
   const buildings = require(buildingsPath);
@@ -36,7 +37,9 @@ const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
   const updatedBuildings = buildings.map((currentBuilding) => ({
     ...currentBuilding,
     objects:
-      currentBuilding.name === buildingName ? objects : currentBuilding.objects,
+      currentBuilding.name === buildingName
+        ? objects.map(objectConvertor)
+        : currentBuilding.objects,
   }));
   fs.writeFile(buildingsPath, JSON.stringify(updatedBuildings), (err) => {
     if (err) return console.log(err);

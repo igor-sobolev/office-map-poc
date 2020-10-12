@@ -1,8 +1,9 @@
 const TILE_URL = 'http://localhost:8080/tiles/{building}?x={x}&y={y}&zoom={z}';
 
 export class GMapWrapper {
-  constructor(ref) {
-    this._el = ref;
+  constructor(root, menu) {
+    this._el = root;
+    this._menu = menu;
     this._onObjectsUpdate = () => {};
     this._markers = [];
     this._building = '';
@@ -22,6 +23,33 @@ export class GMapWrapper {
     this._layer.apply();
 
     this._map.addListener('zoom_changed', () => this._scaleMarkers());
+    this._initMenu();
+  }
+
+  _initMenu() {
+    this._map.controls[window.google.maps.ControlPosition.TOP_CENTER].push(
+      this._menu
+    );
+    this._hideMenu();
+
+    window.google.maps.event.addListener(this._map, 'rightclick', (event) => {
+      // this._showMenu(event); @TODO: could improve
+    });
+
+    window.google.maps.event.addListener(this._map, 'click', () => {
+      this._hideMenu();
+    });
+  }
+
+  _showMenu({ pixel: { x, y } }) {
+    console.dir(this._menu);
+    this._menu.style.display = 'block';
+    this._menu.style.top = `${y}px`;
+    this._menu.style.left = `${x}px`;
+  }
+
+  _hideMenu() {
+    this._menu.style.display = 'none';
   }
 
   _applyLayer(id, layer) {
@@ -33,7 +61,7 @@ export class GMapWrapper {
     const layerID = 'plan';
 
     const layer = new window.google.maps.ImageMapType({
-      name: this._layerID,
+      name: layerID,
       getTileUrl: this._getTileUrl,
       tileSize: new window.google.maps.Size(256, 256),
       minZoom: 2,
@@ -58,40 +86,37 @@ export class GMapWrapper {
   };
 
   _createMarkers(objects) {
-    this._markers = objects.map((object) => {
+    this._markers = objects.map((object, index) => {
       const markerIcon = {
         url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
       };
       const marker = new window.google.maps.Marker({
         ...object,
-        position: object.position || this._map.getCenter(),
+        position: object.position || new window.google.maps.LatLng(0, 0),
         map: this._map,
-        title: object.type,
+        title: object.name,
         icon: markerIcon,
-        draggable: object.draggable,
+        draggable: object.draggable || false,
       });
       marker.addListener('click', () => {
+        if (!object.meta) return;
         this._infoWindow.setContent(JSON.stringify(object.meta));
         this._infoWindow.open(this._map, marker);
       });
       marker.addListener('dragend', () => this._onObjectsUpdate(this._markers));
+      marker.addListener('dblclick', () => this._deleteMarker(index));
 
       return marker;
     });
   }
 
-  _addObject(object) {
-    const markerIcon = {
-      url: 'data:image/svg+xml;charset=UTF-8;base64,' + btoa(object.svg),
-    };
-    const marker = new window.google.maps.Marker({
-      position: new window.google.maps.LatLng(0, 0),
-      map: this._map,
-      animation: window.google.maps.Animation.DROP,
-      title: object.type,
-      icon: markerIcon,
-    });
-    this._markers.push(marker);
+  _deleteMarker(index) {
+    const marker = this._markers[index];
+    const shouldDelete = window.confirm('Delete object?');
+    if (!shouldDelete) return;
+    this._markers.splice(index, 1);
+    marker.setMap(null);
+    this._onObjectsUpdate(this._markers);
   }
 
   _clearMarkers() {
@@ -123,7 +148,7 @@ export class GMapWrapper {
     );
   }
 
-  setObjectsUpdateCallback(cb) {
+  onObjectsUpdate(cb) {
     this._onObjectsUpdate = cb;
   }
 
