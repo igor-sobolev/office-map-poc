@@ -4,6 +4,7 @@ export const convertMarkersToObjects = (object) => ({
     lat: object?.position?.lat(),
     lng: object?.position?.lng(),
   },
+  proportions: object?.proportions,
   meta: object.meta,
   rotate: object.rotate,
   svg: object.svg,

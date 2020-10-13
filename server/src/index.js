@@ -10,6 +10,7 @@ const port = 8080;
 
 app.use(cors());
 app.use(bodyParser.json());
+// app.use('/static', express.static('public'));
 
 app.use('/buildings', buildingsRoutes);
 app.use('/tiles', tilesRoutes);

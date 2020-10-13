@@ -2,8 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 
-const buildingsPath = path.resolve(__dirname, '../data/json/buildings.json');
-const objectsPath = path.resolve(__dirname, '../data/json/objects.json');
+const buildingsPath = path.resolve(
+  __dirname,
+  '../../public/data/json/buildings.json'
+);
+const objectsPath = path.resolve(
+  __dirname,
+  '../../public/data/json/objects.json'
+);
 
 const { getObjectSvgByType } = require('./svg');
 const { objectConvertor } = require('../helpers/objects');
@@ -52,7 +58,7 @@ const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
 const getImageByObjectName = async (objectName) => {
   const imagePath = path.resolve(
     __dirname,
-    `../data/store/objects/${objectName}.svg`
+    `../../public/data/store/objects/${objectName}.svg`
   );
 
   const image = fs.readFileSync(imagePath);

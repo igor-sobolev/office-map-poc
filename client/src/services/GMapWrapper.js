@@ -93,25 +93,31 @@ export class GMapWrapper {
     this._markers = await Promise.all(
       objects.map(async (object, index) => {
         const image = await fetchImageAsBase64(
+          // `http://localhost:8080/static/data/store/objects/${object.name}.svg`
           `http://localhost:8080/buildings/objects/${object.name}/image`
         );
-        const width = Math.round(
-          ICON_SIZE_FACTOR * Math.pow(2, this._map.getZoom())
+        const zoom = this._map.getZoom();
+        const width = Math.ceil(
+          ICON_SIZE_FACTOR * object?.proportions?.width * Math.pow(2, zoom)
+        );
+        const height = Math.ceil(
+          ICON_SIZE_FACTOR * object?.proportions?.height * Math.pow(2, zoom)
         );
         const markerIconUrl = new RotatedIcon({
           url: image,
-          scaledSize: new window.google.maps.Size(width, width), //changes the scale
-          size: new window.google.maps.Size(width, width), //changes the scale
         })
           .setRotation({ deg: object.rotate })
           .getUrl();
-        console.log(markerIconUrl);
         const marker = new window.google.maps.Marker({
           ...object,
           position: object.position || new window.google.maps.LatLng(0, 0),
           map: this._map,
           title: object.name,
-          icon: { url: markerIconUrl },
+          icon: {
+            url: markerIconUrl,
+            scaledSize: new window.google.maps.Size(width, height), //changes the scale
+            size: new window.google.maps.Size(width, height), //changes the scale
+          },
           draggable: object.draggable || false,
         });
         marker.addListener('click', () => {
@@ -144,24 +150,24 @@ export class GMapWrapper {
   }
 
   _scaleMarkers() {
-    const maxPixelSize = 450; //restricts the maximum size of the icon, otherwise the browser will choke at higher zoom levels trying to scale an image to millions of pixels
-
     const zoom = this._map.getZoom();
-    let relativePixelSize = Math.round(ICON_SIZE_FACTOR * Math.pow(2, zoom)); // use 2 to the power of current zoom to calculate relative pixel size.  Base of exponent is 2 because relative size should double every time you zoom in
-
-    if (relativePixelSize > maxPixelSize)
-      //restrict the maximum size of the icon
-      relativePixelSize = maxPixelSize;
+    const width = (proportions) =>
+      Math.round(ICON_SIZE_FACTOR * proportions?.width * Math.pow(2, zoom));
+    const height = (proportions) =>
+      Math.round(ICON_SIZE_FACTOR * proportions?.height * Math.pow(2, zoom));
 
     //change the size of the icon
     this._markers.forEach((marker) =>
       marker.setIcon({
         ...marker.getIcon(), //marker's same icon graphic
         scaledSize: new window.google.maps.Size(
-          relativePixelSize,
-          relativePixelSize
+          width(marker.proportions),
+          height(marker.proportions)
         ), //changes the scale
-        size: new window.google.maps.Size(relativePixelSize, relativePixelSize), //changes the scale
+        size: new window.google.maps.Size(
+          width(marker.proportions),
+          height(marker.proportions)
+        ), //changes the scale
       })
     );
   }

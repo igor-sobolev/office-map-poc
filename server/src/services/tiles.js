@@ -37,7 +37,7 @@ const getTile = async (x, y, zoom, buildingName) => {
   const picSize = number * TILE_SIZE; // expected size of image to be resized to
   const imagePath = path.resolve(
     __dirname,
-    `../data/store/buildings/${buildingName}.jpg`
+    `../../public/data/store/buildings/${buildingName}.jpg`
   ); // example image
 
   if (x >= number || y >= number || x < 0 || y < 0) return null; // if outside bounds should return nothing
