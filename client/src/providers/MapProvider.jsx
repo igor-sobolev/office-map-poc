@@ -2,7 +2,8 @@ import React, { useCallback, useState, useEffect, useContext } from 'react';
 import { createContext } from 'react';
 import PropTypes from 'prop-types';
 import { updateObjectsPosition } from '../services/building';
-import { convertMarkersToObjects } from '../helpers/objects';
+import { convertMarkersToObjects } from '../helpers/buldings';
+import { uuid } from '../helpers/uuid'; // may be useless
 
 const MapCtx = createContext();
 
@@ -32,10 +33,10 @@ const MapProvider = ({ children }) => {
   }, [building]);
 
   useEffect(() => {
-    if (map && building?.name && objects) {
+    if (map && building?.name) {
       map.setBuilding(building.name);
     }
-  }, [map, building, objects]);
+  }, [map, building]);
 
   useEffect(() => {
     if (map && objects) {
@@ -53,7 +54,7 @@ const MapProvider = ({ children }) => {
     (object) => {
       setObjects((prevObjects) => [
         ...prevObjects,
-        { ...object, draggable: isMoveMode },
+        { ...object, draggable: isMoveMode, id: uuid() },
       ]);
     },
     [isMoveMode]

@@ -1,8 +1,10 @@
-import { fetchImageAsBase64 } from '../helpers/image';
-import { RotatedIcon } from './RotatedIcon';
+import { ImageToBase64 } from '../helpers/image';
+import { RotatableIcon } from './RotatableIcon';
 
 const TILE_URL = 'http://localhost:8080/tiles/{building}?x={x}&y={y}&zoom={z}';
 const ICON_SIZE_FACTOR = 8; //the size of the icon at zoom level 0, at zoom level 2 it'll be 8*2^2=32
+
+const imageLoader = new ImageToBase64();
 
 export class GMapWrapper {
   constructor(root, menu) {
@@ -46,7 +48,6 @@ export class GMapWrapper {
   }
 
   _showMenu({ pixel: { x, y } }) {
-    console.dir(this._menu);
     this._menu.style.display = 'block';
     this._menu.style.top = `${y}px`;
     this._menu.style.left = `${x}px`;
@@ -92,33 +93,24 @@ export class GMapWrapper {
   async _createMarkers(objects) {
     this._markers = await Promise.all(
       objects.map(async (object, index) => {
-        const image = await fetchImageAsBase64(
-          // `http://localhost:8080/static/data/store/objects/${object.name}.svg`
-          `http://localhost:8080/buildings/objects/${object.name}/image`
+        const base64Image = await imageLoader.fetch(
+          // `http://localhost:8080/static/data/store/objects/${object.name}.svg` // if served from static
+          `http://localhost:8080/buildings/objects/${object.name}/image` // default endpoint
         );
-        const zoom = this._map.getZoom();
-        const width = Math.ceil(
-          ICON_SIZE_FACTOR * object?.proportions?.width * Math.pow(2, zoom)
-        );
-        const height = Math.ceil(
-          ICON_SIZE_FACTOR * object?.proportions?.height * Math.pow(2, zoom)
-        );
-        const markerIconUrl = new RotatedIcon({
-          url: image,
-        })
+        const markerIcon = RotatableIcon.makeIcon(base64Image);
+        await markerIcon.load();
+        const markerIconUrl = markerIcon
           .setRotation({ deg: object.rotate })
           .getUrl();
         const marker = new window.google.maps.Marker({
           ...object,
-          position: object.position || new window.google.maps.LatLng(0, 0),
+          position: object?.position || new window.google.maps.LatLng(0, 0),
           map: this._map,
           title: object.name,
           icon: {
             url: markerIconUrl,
-            scaledSize: new window.google.maps.Size(width, height), //changes the scale
-            size: new window.google.maps.Size(width, height), //changes the scale
           },
-          draggable: object.draggable || false,
+          draggable: object.draggable,
         });
         marker.addListener('click', () => {
           if (!object.meta) return;
@@ -168,6 +160,11 @@ export class GMapWrapper {
           width(marker.proportions),
           height(marker.proportions)
         ), //changes the scale
+        origin: new window.google.maps.Point(0, 0),
+        anchor: new window.google.maps.Point(
+          width(marker.proportions) / 2,
+          height(marker.proportions) / 2
+        ),
       })
     );
   }
@@ -176,14 +173,16 @@ export class GMapWrapper {
     this._onObjectsUpdate = cb;
   }
 
-  renderObjects(objects) {
+  async renderObjects(objects) {
     this._clearMarkers();
-    this._createMarkers(objects);
+    await this._createMarkers(objects);
     this._scaleMarkers();
   }
 
   setBuilding(buildingName) {
-    this._building = buildingName;
-    this._loadMap();
+    if (this._building !== buildingName) {
+      this._building = buildingName;
+      this._loadMap();
+    }
   }
 }

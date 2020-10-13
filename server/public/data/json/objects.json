@@ -1,16 +1,16 @@
 [
   {
     "name": "table",
-    "size": {
-      "width": 32,
-      "heigh": 20
+    "proportions": {
+      "width": 1,
+      "height": 1
     }
   },
   {
     "name": "soccer-table",
-    "size": {
-      "width": 20,
-      "heigh": 20
+    "proportions": {
+      "width": 1,
+      "height": 1
     }
   }
 ]
