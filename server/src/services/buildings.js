@@ -11,33 +11,11 @@ const objectsPath = path.resolve(
   '../../public/data/json/objects.json'
 );
 
-const { getObjectSvgByType } = require('./svg');
 const { objectConvertor } = require('../helpers/objects');
 
-const getAllBuildings = () => {
-  const buildings = require(buildingsPath);
-  const buildingsWithSvg = buildings.map(async (building) => ({
-    ...building,
-    objects: await addSvgToObjects(building.objects),
-  }));
+const getAllBuildings = () => require(buildingsPath);
 
-  return Promise.all(buildingsWithSvg);
-};
-
-const getAllObjects = async () => {
-  const objects = require(objectsPath);
-
-  return await addSvgToObjects(objects);
-};
-
-const addSvgToObjects = (objects) => {
-  const newObjects = objects.map(async (object) => ({
-    ...object,
-    svg: await getObjectSvgByType(object.name, { rotate: object.rotate }),
-  }));
-
-  return Promise.all(newObjects);
-};
+const getAllObjects = () => require(objectsPath);
 
 const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
   const buildings = require(buildingsPath);
@@ -56,11 +34,16 @@ const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
 };
 
 const getImageByObjectName = async (objectName) => {
+  const objects = require(objectsPath);
+  const foundObject = objects.find((object) => object.name === objectName);
+
+  if (!foundObject) throw new Error('Bad object name');
+
+  const imageName = foundObject && foundObject.image;
   const imagePath = path.resolve(
     __dirname,
-    `../../public/data/store/objects/${objectName}.svg`
+    `../../public/data/store/objects/${imageName}`
   );
-
   const image = fs.readFileSync(imagePath);
 
   return sharp(image).toFormat('png').toBuffer();

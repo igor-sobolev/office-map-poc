@@ -4,13 +4,15 @@
     "proportions": {
       "width": 1,
       "height": 1
-    }
+    },
+    "image": "table.svg"
   },
   {
     "name": "soccer-table",
     "proportions": {
       "width": 1,
       "height": 1
-    }
+    },
+    "image": "soccer-table.svg"
   }
 ]

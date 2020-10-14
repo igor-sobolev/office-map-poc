@@ -98,8 +98,7 @@ export class GMapWrapper {
     this._markers = await Promise.all(
       objects.map(async (object, index) => {
         const base64Image = await imageLoader.fetch(
-          // `http://localhost:8080/static/data/store/objects/${object.name}.svg` // if served from static
-          `http://localhost:8080/buildings/objects/${object.name}/image` // default endpoint
+          `http://localhost:8080/buildings/objects/${object.name}/image`
         );
         const markerIcon = RotatableIcon.makeIcon(base64Image);
         await markerIcon.load();
@@ -117,11 +116,13 @@ export class GMapWrapper {
           draggable: object.draggable,
         });
         marker.addListener('click', () => {
-          // this._infoWindow.close();
-          // if (object.meta) {
-          //   this._infoWindow.setContent(JSON.stringify(object.meta));
-          //   this._infoWindow.open(this._map, marker);
-          // }
+          this._infoWindow.close();
+          if (object.meta) {
+            this._infoWindow.setContent(JSON.stringify(object.meta));
+            this._infoWindow.open(this._map, marker);
+          }
+          // @TODO: will reset info window appearing on select object, need to change rendering of markers to
+          // "update existing" or something else
           this._onObjectSelect(object);
         });
         marker.addListener('dragend', () =>
