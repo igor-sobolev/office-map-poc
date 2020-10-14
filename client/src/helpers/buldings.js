@@ -1,16 +1,16 @@
 import { uuid } from './uuid';
 
-export const convertMarkersToObjects = (object) => ({
-  name: object.name,
+export const convertMarkersToObjects = (marker) => ({
+  id: marker.id,
+  name: marker.name,
   position: {
-    lat: object?.position?.lat(),
-    lng: object?.position?.lng(),
+    lat: marker?.position?.lat(),
+    lng: marker?.position?.lng(),
   },
-  proportions: object?.proportions,
-  meta: object.meta,
-  rotate: object.rotate,
-  svg: object.svg,
-  draggable: object.draggable,
+  proportions: marker?.proportions,
+  meta: marker.meta,
+  rotate: marker.rotate,
+  draggable: marker.draggable,
 });
 
 export const addIdentifiers = (buildings) =>

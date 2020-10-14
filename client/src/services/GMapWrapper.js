@@ -1,3 +1,6 @@
+import throttle from 'lodash.throttle';
+
+import { convertMarkersToObjects } from '../helpers/buldings';
 import { ImageToBase64 } from '../helpers/image';
 import { RotatableIcon } from './RotatableIcon';
 
@@ -11,6 +14,7 @@ export class GMapWrapper {
     this._el = root;
     this._menu = menu;
     this._onObjectsUpdate = () => {};
+    this._onObjectSelect = () => {};
     this._markers = [];
     this._building = '';
 
@@ -113,14 +117,17 @@ export class GMapWrapper {
           draggable: object.draggable,
         });
         marker.addListener('click', () => {
-          if (!object.meta) return;
-          this._infoWindow.setContent(JSON.stringify(object.meta));
-          this._infoWindow.open(this._map, marker);
+          // this._infoWindow.close();
+          // if (object.meta) {
+          //   this._infoWindow.setContent(JSON.stringify(object.meta));
+          //   this._infoWindow.open(this._map, marker);
+          // }
+          this._onObjectSelect(object);
         });
         marker.addListener('dragend', () =>
-          this._onObjectsUpdate(this._markers)
+          this._onObjectsUpdate(this._markers.map(convertMarkersToObjects))
         );
-        marker.addListener('dblclick', () => this._deleteMarker(index));
+        marker.addListener('dblclick', () => this._deleteMarker(index)); // @TODO: can be moved to "Selected Object" functionality
 
         return marker;
       })
@@ -173,11 +180,15 @@ export class GMapWrapper {
     this._onObjectsUpdate = cb;
   }
 
-  async renderObjects(objects) {
+  onObjectSelect(cb) {
+    this._onObjectSelect = cb;
+  }
+
+  renderObjects = throttle(async (objects) => {
     this._clearMarkers();
     await this._createMarkers(objects);
     this._scaleMarkers();
-  }
+  }, 500);
 
   setBuilding(buildingName) {
     if (this._building !== buildingName) {

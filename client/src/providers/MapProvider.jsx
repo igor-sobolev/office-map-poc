@@ -2,31 +2,102 @@ import React, { useCallback, useState, useEffect, useContext } from 'react';
 import { createContext } from 'react';
 import PropTypes from 'prop-types';
 import { updateObjectsPosition } from '../services/building';
-import { convertMarkersToObjects } from '../helpers/buldings';
-import { uuid } from '../helpers/uuid'; // may be useless
+import { uuid } from '../helpers/uuid'; // @TODO: may be useless, just in case to need IDs
 
 const MapCtx = createContext();
 
 const MapProvider = ({ children }) => {
   const [map, setMap] = useState();
   const [building, setBuilding] = useState();
+  const [selectedObject, setSelectedObject] = useState();
   const [isMoveMode, setMoveMode] = useState(false);
   const [objects, setObjects] = useState([]);
 
   const onObjectsUpdateHandler = useCallback(
-    (markers) => {
-      const objects = markers
-        .map(convertMarkersToObjects)
-        .map((object) => ({ ...object, draggable: isMoveMode }));
+    (objects) => {
       setObjects(objects);
       updateObjectsPosition(building, objects);
     },
-    [building, isMoveMode]
+    [building]
+  );
+
+  const onObjectSelectHandler = useCallback(
+    (object) => {
+      setSelectedObject(object);
+    },
+    [setSelectedObject]
+  );
+
+  const onChangeRotationHandler = useCallback(
+    (event) => {
+      const {
+        target: { value },
+      } = event;
+      const modificatedObject = {
+        ...selectedObject,
+        rotate: Number.parseInt(value),
+      };
+      const modificatedObjects = objects.map((object) =>
+        object.id === selectedObject.id ? modificatedObject : object
+      );
+      setSelectedObject(modificatedObject);
+      setObjects(modificatedObjects);
+      updateObjectsPosition(building, objects); // @TODO: update on server
+    },
+    [setObjects, objects, selectedObject, building]
+  );
+
+  const onChangeWidthProportionHandler = useCallback(
+    (event) => {
+      const {
+        target: { value },
+      } = event;
+      const modificatedObject = {
+        ...selectedObject,
+        proportions: {
+          ...selectedObject.proportions,
+          width: Number.parseFloat(value),
+        },
+      };
+      const modificatedObjects = objects.map((object) =>
+        object.id === selectedObject.id ? modificatedObject : object
+      );
+      setSelectedObject(modificatedObject);
+      setObjects(modificatedObjects);
+      updateObjectsPosition(building, objects); // @TODO: update on server
+    },
+    [setObjects, objects, selectedObject, building]
+  );
+
+  const onChangeHeightProportionHandler = useCallback(
+    (event) => {
+      const {
+        target: { value },
+      } = event;
+      const modificatedObject = {
+        ...selectedObject,
+        proportions: {
+          ...selectedObject.proportions,
+          height: Number.parseFloat(value),
+        },
+      };
+      const modificatedObjects = objects.map((object) =>
+        object.id === selectedObject.id ? modificatedObject : object
+      );
+      setSelectedObject(modificatedObject);
+      setObjects(modificatedObjects);
+      updateObjectsPosition(building, objects); // @TODO: update on server
+    },
+    [setObjects, objects, selectedObject, building]
   );
 
   useEffect(() => {
     if (map) map.onObjectsUpdate(onObjectsUpdateHandler);
   }, [map, onObjectsUpdateHandler]);
+
+  useEffect(() => {
+    if (map) map.onObjectSelect(onObjectSelectHandler);
+  }, [map, onObjectSelectHandler]);
 
   useEffect(() => {
     if (building?.objects) setObjects(building.objects);
@@ -42,11 +113,18 @@ const MapProvider = ({ children }) => {
     if (map && objects) {
       map.renderObjects(objects);
     }
-  }, [map, objects]);
+  }, [map, objects, selectedObject]);
 
   useEffect(() => {
     setObjects((previousObjects) =>
       previousObjects.map((object) => ({ ...object, draggable: isMoveMode }))
+    );
+    setSelectedObject(
+      (previousSelectedObject) =>
+        previousSelectedObject && {
+          ...previousSelectedObject,
+          draggable: isMoveMode,
+        }
     );
   }, [isMoveMode]);
 
@@ -54,7 +132,7 @@ const MapProvider = ({ children }) => {
     (object) => {
       setObjects((prevObjects) => [
         ...prevObjects,
-        { ...object, draggable: isMoveMode, id: uuid() },
+        { ...object, draggable: isMoveMode, id: uuid(), rotate: 0 },
       ]);
     },
     [isMoveMode]
@@ -70,6 +148,10 @@ const MapProvider = ({ children }) => {
         addObject,
         isMoveMode,
         setMoveMode,
+        selectedObject,
+        onChangeHeightProportionHandler,
+        onChangeWidthProportionHandler,
+        onChangeRotationHandler,
       }}
     >
       {children}

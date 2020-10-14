@@ -15,6 +15,10 @@ const OfficeMap = () => {
     addObject,
     setMoveMode,
     isMoveMode,
+    selectedObject,
+    onChangeHeightProportionHandler,
+    onChangeRotationHandler,
+    onChangeWidthProportionHandler,
   } = useOfficeMap();
 
   const [object, setObject] = useState();
@@ -71,6 +75,46 @@ const OfficeMap = () => {
       </div>
 
       <Map width={900} height={555} contextMenu={menu} />
+
+      {selectedObject && (
+        <div className={styles.selectedObject}>
+          <p>{JSON.stringify(selectedObject)}</p>
+          <label htmlFor="rotate">
+            Rotate:{' '}
+            <input
+              type="range"
+              min="0"
+              max="360"
+              value={selectedObject?.rotate}
+              onChange={onChangeRotationHandler}
+              id="rotate"
+            />
+            {selectedObject?.rotate}
+          </label>
+          <label htmlFor="widthProportion">
+            Width:{' '}
+            <input
+              type="number"
+              step="0.05"
+              value={selectedObject?.proportions?.width}
+              onChange={onChangeWidthProportionHandler}
+              id="widthProportion"
+            />
+            {selectedObject?.proportions?.width}
+          </label>
+          <label htmlFor="heightProportion">
+            Height:{' '}
+            <input
+              type="number"
+              step="0.05"
+              value={selectedObject?.proportions?.height}
+              onChange={onChangeHeightProportionHandler}
+              id="heightProportion"
+            />
+            {selectedObject?.proportions?.height}
+          </label>
+        </div>
+      )}
     </>
   );
 };

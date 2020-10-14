@@ -4,10 +4,7 @@ export class ImageToBase64 {
   }
 
   async fetch(url) {
-    if (this.cache.get(url)) {
-      console.log('skip fetch');
-      return this.cache.get(url);
-    }
+    if (this.cache.get(url)) return this.cache.get(url);
     const res = await fetch(url);
     const raw = await res.blob();
     const result = await this._blobToBase64(raw);

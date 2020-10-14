@@ -11,6 +11,21 @@
   margin: 0.2rem 0.5rem;
 }
 
+.selectedObject {
+  margin: 0.5rem;
+  white-space: pre-wrap;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+}
+
+.selectedObject > label {
+  display: flex;
+  margin: 0.2rem auto;
+  min-width: 300px;
+  justify-content: space-between;
+}
+
 button {
   display: block;
   height: 2rem;
