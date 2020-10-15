@@ -18,7 +18,7 @@ const getAllBuildings = () => require(buildingsPath);
 const getAllObjects = () => require(objectsPath);
 
 const updateBuildingObjectsByBuildingName = (buildingName, objects) => {
-  const buildings = require(buildingsPath);
+  const buildings = getAllBuildings();
   const updatedBuildings = buildings.map((currentBuilding) => ({
     ...currentBuilding,
     objects:
